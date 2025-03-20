@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocAI - Health Analysis</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            margin-top: 50px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        #analyzeBtn {
+            font-size: 18px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            width: 100%;
+        }
+        #video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        #result {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .loading {
+            font-style: italic;
+            color: #6c757d;
+        }
+        .report-container {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>DocAI - Health Analysis</h1>
+        <video id="video" autoplay></video>
+        <button id="analyzeBtn" class="btn btn-primary">Start Health Analysis</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const video = document.getElementById("video");
+        const analyzeBtn = document.getElementById("analyzeBtn");
+        const resultDiv = document.getElementById("result");
+
+        analyzeBtn.onclick = function () {
+            resultDiv.innerHTML = "";
+            video.style.display = "block";
+            analyzeBtn.disabled = true;
+
+            // Start webcam
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                    video.srcObject = stream;
+                });
+
+            // Simulate scanning effect
+            setTimeout(() => {
+                video.style.display = "none";
+                video.srcObject.getTracks().forEach(track => track.stop()); // Stop camera
+                
+                resultDiv.innerHTML = `<p class="loading">Processing your health data...</p>`;
+
+                fetch('/analyze')
+                    .then(response => response.json())
+                    .then(data => {
+                        resultDiv.innerHTML = `
+                            <div class="report-container">
+                                <h4>Health Data</h4>
+                                <p><strong>Heart Rate:</strong> ${data.heart_rate}</p>
+                                <p><strong>Hydration:</strong> ${data.hydration}</p>
+                                <p><strong>Temperature:</strong> ${data.temperature}</p>
+                                <p><strong>Blood Pressure:</strong> ${data.blood_pressure}</p>
+                                <p class="loading">Generating AI Health Report...</p>
+                            </div>
+                        `;
+
+                        fetch('/report', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => response.json())
+                        .then(report => {
+                            resultDiv.innerHTML += `
+                                <div class="report-container">
+                                    <h4>AI Health Report</h4>
+                                    <p>${report.report}</p>
+                                </div>
+                            `;
+                            analyzeBtn.disabled = false;
+                        });
+                    });
+            }, 5000); // Simulate scanning for 5 seconds
+        };
+    </script>
+
+</body>
+</html>
