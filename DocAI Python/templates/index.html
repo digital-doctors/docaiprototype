@@ -1,124 +1,477 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocAI - Health Analysis</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Arial', sans-serif;
-        }
-        .container {
-            max-width: 600px;
-            background: white;
-            padding: 30px;
-            margin-top: 50px;
-            border-radius: 15px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        h1 {
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 20px;
-        }
-        #analyzeBtn {
-            font-size: 18px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            width: 100%;
-        }
-        #video {
-            width: 100%;
-            max-width: 400px;
-            border-radius: 10px;
-            margin-top: 15px;
-            display: none;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-        }
-        #result {
-            margin-top: 20px;
-            text-align: left;
-        }
-        .loading {
-            font-style: italic;
-            color: #6c757d;
-        }
-        .report-container {
-            background: #f1f1f1;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocAI - Health Analysis</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <style>
+    :root {
+      --bg-light: #f2f5f9;
+      --bg-dark: #1a1a1a;
+      --card-light: #ffffff;
+      --card-dark: #2c2c2c;
+      --text-light: #1a1a1a;
+      --text-dark: #e0e0e0;
+      --primary: #4a90e2;
+      --success: #28a745;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: all 0.3s ease;
+    }
+
+    body.dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .container-custom {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 30px;
+      background: var(--card-light);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+      transition: all 0.3s ease;
+    }
+
+    body.dark-mode .container-custom {
+      background: var(--card-dark);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .btn-custom {
+      background: var(--primary);
+      border: none;
+      color: white;
+      font-size: 18px;
+      font-weight: 500;
+      padding: 14px 30px;
+      border-radius: 50px;
+      width: 100%;
+      transition: background 0.3s ease;
+    }
+
+    .btn-custom:hover {
+      background: #357ab8;
+    }
+
+    .form-control {
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .btn-primary {
+      background-color: var(--success);
+      border: none;
+      font-weight: 500;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .report-container {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      margin-top: 20px;
+    }
+
+    body.dark-mode .report-container {
+      background: #2f2f2f;
+    }
+
+    .loading {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    #imageResult {
+      white-space: pre-wrap;
+    }
+
+    .fade-in {
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .voice-button {
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--primary);
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>DocAI - Health Analysis</h1>
-        <video id="video" autoplay></video>
-        <button id="analyzeBtn" class="btn btn-primary">Start Health Analysis</button>
-        <div id="result"></div>
+  <div class="container-custom fade-in">
+    <div class="toggle-container text-end">
+      <button id="toggleMode" class="btn btn-outline-secondary btn-sm">🌙 Toggle Dark Mode</button>
     </div>
+  
+    <h1>DocAI - Health Portal</h1>
+  
+    <div class="text-center mb-3">
+      <button id="voiceAssistant" class="voice-button" title="Voice Assistant">🗣️</button>
+    </div>
+  
+    <ul class="nav nav-tabs" id="tabMenu" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="patient-tab" data-bs-toggle="tab" data-bs-target="#patient" type="button" role="tab">Patient Info</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="scan-tab" data-bs-toggle="tab" data-bs-target="#scan" type="button" role="tab">Health Scan</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="form-tab" data-bs-toggle="tab" data-bs-target="#form" type="button" role="tab">Health Form</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="image-tab" data-bs-toggle="tab" data-bs-target="#image" type="button" role="tab">Input Images</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="subscription-tab" data-bs-toggle="tab" data-bs-target="#subscription" type="button" role="tab">Next Steps</button>
+      </li>
+    </ul>
+  
+    <div class="tab-content" style="height: 400px; overflow-y: auto;">
+      <!-- Patient Info Tab -->
+      <div class="tab-pane fade show active" id="patient" role="tabpanel">
+        <form id="patientInfoForm" method="POST" action="/submit-patient" class="mt-4">
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" name="full_name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" class="form-control" name="dob" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phone Number</label>
+            <input type="text" class="form-control" name="phone" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Address</label>
+            <textarea class="form-control" name="address" rows="2" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Submit Patient Info</button>
+        </form>
+      </div>
+  
+      <!-- Health Scan Tab -->
+      <div class="tab-pane fade" id="scan" role="tabpanel">
+        <div class="card mt-3">
+          <div class="card-body">
+            <div class="video-container text-center mb-3">
+              <video id="video" autoplay style="display: none; max-width: 100%; border-radius: 12px;"></video>
+            </div>
+            <button id="analyzeBtn" class="btn-custom">Start Health Analysis</button>
+            <div id="lottieLoading" class="text-center mt-3" style="display: none;">
+              <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_usmfx6bp.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+              <p>Processing health data...</p>
+            </div>
+            <div id="result" class="mt-4"></div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Health Form Tab -->
+      <div class="tab-pane fade" id="form" role="tabpanel">
+        <form id="healthForm" method="POST" action="/submit-form" class="mt-4">
+          <div class="mb-3">
+            <label class="form-label">1. What brings you in today?</label>
+            <input type="text" class="form-control" name="question1" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">2. Recent changes in health or symptoms?</label>
+            <textarea class="form-control" name="question2" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">3. Any known allergies?</label>
+            <textarea class="form-control" name="question3" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">4. History of chronic diseases?</label>
+            <textarea class="form-control" name="question4" rows="2" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">5. Are you on any medications?</label>
+            <textarea class="form-control" name="question5" rows="2" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Submit Form</button>
+        </form>
+      </div>
+  
+      <!-- Input Images Tab -->
+<div class="tab-pane fade" id="image" role="tabpanel">
+  <div class="card mt-3">
+    <div class="card-body">
+      <h4 class="card-title text-center">Upload Images for Analysis</h4>
+      <p class="text-muted text-center">Upload one or more images for AI-powered analysis.</p>
+      <form id="imageForm" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="images" class="form-label">Select Images</label>
+          <input class="form-control" type="file" id="images" name="images" accept="image/*" multiple required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Analyze Images</button>
+      </form>
+      <div id="imageResult" class="mt-4"></div>
+    </div>
+  </div>
+</div>
 
-    <script>
-        const video = document.getElementById("video");
-        const analyzeBtn = document.getElementById("analyzeBtn");
-        const resultDiv = document.getElementById("result");
+<div class="tab-pane fade" id="subscription" role="tabpanel">
+  <div class="card mt-3">
+    <div class="card-body">
+      <h4 class="card-title text-center">Next Steps</h4>
+      <p class="text-muted text-center">DocAI provides many subscriptions based on your needs!</p>
 
-        analyzeBtn.onclick = function () {
-            resultDiv.innerHTML = "";
-            video.style.display = "block";
-            analyzeBtn.disabled = true;
+      <form id="subscriptionForm" method="POST" action="/submit-subscription" class="mt-4">
+        <div class="mb-3">
+          <label class="form-label">Select Your Subscription Plan</label>
+          <select class="form-select" name="subscription_plan" required>
+            <option value="" disabled selected>Choose a plan...</option>
+            <option value="weekly">Weekly Checkups</option>
+            <option value="bi-weekly">Bi-Weekly Checkups</option>
+            <option value="monthly">Monthly Checkups</option>
+            <option value="quarterly">Quarterly Checkups</option>
+          </select>
+        </div>
 
-            // Start webcam
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then((stream) => {
-                    video.srcObject = stream;
-                });
+        <div class="mb-3">
+          <label class="form-label">Preferred Day for Appointments</label>
+          <select class="form-select" name="preferred_day" required>
+            <option value="" disabled selected>Choose a day...</option>
+            <option value="monday">Monday</option>
+            <option value="tuesday">Tuesday</option>
+            <option value="wednesday">Wednesday</option>
+            <option value="thursday">Thursday</option>
+            <option value="friday">Friday</option>
+          </select>
+        </div>
 
-            // Simulate scanning effect
-            setTimeout(() => {
-                video.style.display = "none";
-                video.srcObject.getTracks().forEach(track => track.stop()); // Stop camera
-                
-                resultDiv.innerHTML = `<p class="loading">Processing your health data...</p>`;
+        <div class="mb-3">
+          <label class="form-label">Preferred Time for Appointments</label>
+          <input type="time" class="form-control" name="preferred_time" required>
+        </div>
 
-                fetch('/analyze')
-                    .then(response => response.json())
-                    .then(data => {
-                        resultDiv.innerHTML = `
-                            <div class="report-container">
-                                <h4>Health Data</h4>
-                                <p><strong>Heart Rate:</strong> ${data.heart_rate}</p>
-                                <p><strong>Hydration:</strong> ${data.hydration}</p>
-                                <p><strong>Temperature:</strong> ${data.temperature}</p>
-                                <p><strong>Blood Pressure:</strong> ${data.blood_pressure}</p>
-                                <p class="loading">Generating AI Health Report...</p>
-                            </div>
-                        `;
+        <div class="mb-3">
+          <label class="form-label">Additional Notes (Optional)</label>
+          <textarea class="form-control" name="notes" rows="3" placeholder="Any specific preferences or requirements?"></textarea>
+        </div>
 
-                        fetch('/report', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
-                        })
-                        .then(response => response.json())
-                        .then(report => {
-                            resultDiv.innerHTML += `
-                                <div class="report-container">
-                                    <h4>AI Health Report</h4>
-                                    <p>${report.report}</p>
-                                </div>
-                            `;
-                            analyzeBtn.disabled = false;
-                        });
-                    });
-            }, 5000); // Simulate scanning for 5 seconds
-        };
+        <button type="submit" class="btn btn-primary w-100">Submit Subscription</button>
+      </form>
+
+      <div id="subscriptionResult" class="mt-4"></div>
+    </div>
+  </div>
+</div>
+
+
+
+
+    </div>
+  </div>
+
+  <footer class="text-center mt-4">
+    <p>&copy; 2025 DocAI. All rights reserved.</p>
+  </footer>
+
+<script>
+  const imageForm = document.getElementById('imageForm');
+  const imageResult = document.getElementById('imageResult');
+
+  imageForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(imageForm);
+
+    imageResult.innerHTML = `<p class="text-info">Analyzing images, please wait...</p>`;
+
+    fetch('/analyze-image', {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          imageResult.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
+        } else {
+          imageResult.innerHTML = `<p class="text-success">${data.message}</p>`;
+        }
+      })
+      .catch(error => {
+        console.error("Error analyzing images:", error);
+        imageResult.innerHTML = `<p class="text-danger">Error analyzing images: ${error.message}</p>`;
+      });
+  });
+</script>
+<script>
+  const subscriptionForm = document.getElementById('subscriptionForm');
+  const subscriptionResult = document.getElementById('subscriptionResult');
+
+  subscriptionForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(subscriptionForm);
+
+    subscriptionResult.innerHTML = `<p class="text-info">Submitting your subscription, please wait...</p>`;
+
+    fetch('/submit-subscription', {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          subscriptionResult.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
+        } else {
+          subscriptionResult.innerHTML = `<p class="text-success">${data.message}</p>`;
+        }
+      })
+      .catch(error => {
+        console.error("Error submitting subscription:", error);
+        subscriptionResult.innerHTML = `<p class="text-danger">Error submitting subscription: ${error.message}</p>`;
+      });
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const video = document.getElementById("video");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  const resultDiv = document.getElementById("result");
+  const lottie = document.getElementById("lottieLoading");
+
+  analyzeBtn.onclick = function () {
+    resultDiv.innerHTML = "";
+    lottie.style.display = "block";
+    video.style.display = "block";
+    analyzeBtn.disabled = true;
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        video.srcObject = stream;
+      })
+      .catch((error) => {
+        lottie.style.display = "none";
+        resultDiv.innerHTML = `<p class="text-danger">Unable to access webcam.</p>`;
+        analyzeBtn.disabled = false;
+      });
+
+    setTimeout(() => {
+      video.style.display = "none";
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+
+      fetch('/analyze')
+        .then(response => response.json())
+        .then(data => {
+          lottie.style.display = "none";
+          resultDiv.innerHTML = `
+            <div class="report-container fade-in">
+              <h4>Health Data</h4>
+              <p><strong>Heart Rate:</strong> ${data.heart_rate}</p>
+              <p><strong>Hydration:</strong> ${data.hydration}</p>
+              <p><strong>Temperature:</strong> ${data.temperature}</p>
+              <p><strong>Blood Pressure:</strong> ${data.blood_pressure}</p>
+              <p class="loading">Report sent to the doctor. Please wait...</p>
+            </div>
+          `;
+
+          return fetch('/send_report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+        })
+        .then(response => response.json())
+        .then(result => {
+          Swal.fire({
+            title: "Report Sent!",
+            text: "Your health report was sent to the doctor successfully.",
+            icon: "success",
+            confirmButtonColor: "#4a90e2"
+          });
+        })
+        .catch(error => {
+          console.error("Error sending report:", error);
+          Swal.fire({
+            title: "Oops...",
+            text: "There was an error sending the report. Please try again.",
+            icon: "error",
+            confirmButtonColor: "#4a90e2"
+          });
+        })
+        .finally(() => {
+          analyzeBtn.disabled = false;
+        });
+    }, 4000);
+  };
+
+  document.getElementById("toggleMode").onclick = () => {
+    document.body.classList.toggle("dark-mode");
+  };
+
+  document.getElementById("voiceAssistant").onclick = () => {
+    const message = new SpeechSynthesisUtterance("Welcome to DocAI. You can start a health scan, fill in the form, or upload an image for analysis. Please begin by selecting a tab, before the doctor arrives.");
+    message.lang = 'en-US';
+    speechSynthesis.speak(message);
+  };
+  // Patient Info Submission Confirmation
+document.getElementById("patientInfoForm").addEventListener("submit", function (event) {
+  event.preventDefault();
+  const form = event.target;
+
+  fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form)
+  })
+  .then(response => response.text())
+  .then(result => {
+    Swal.fire({
+      title: "Submitted!",
+      text: "Patient information was sent successfully.",
+      icon: "success",
+      confirmButtonColor: "#4a90e2"
+    });
+    form.reset();
+  })
+  .catch(error => {
+    Swal.fire({
+      title: "Error!",
+      text: "There was a problem submitting the patient info.",
+      icon: "error",
+      confirmButtonColor: "#4a90e2"
+    });
+    console.error("Error submitting patient info:", error);
+  });
+});
+
     </script>
 
 </body>
